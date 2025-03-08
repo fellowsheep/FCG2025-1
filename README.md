@@ -1,1 +1,3 @@
-# FCG2025-1
+# Fundamentos de Computação Gráfica
+
+Este é o repo da AA FCG.
