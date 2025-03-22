@@ -26,6 +26,7 @@
 #include <iostream>
 #include <string>
 #include <assert.h>
+#include <cmath>
 
 using namespace std;
 
@@ -136,6 +137,7 @@ int main()
 	double prev_s = glfwGetTime();	// Define o "tempo anterior" inicial.
 	double title_countdown_s = 0.1; // Intervalo para atualizar o título da janela com o FPS.
 
+	float colorValue = 0.0;
 	// Loop da aplicação - "game loop"
 	while (!glfwWindowShouldClose(window))
 	{
@@ -172,7 +174,9 @@ int main()
 
 		glBindVertexArray(VAO); // Conectando ao buffer de geometria
 
-		glUniform4f(colorLoc, 0.0f, 0.0f, 1.0f, 1.0f); // enviando cor para variável uniform inputColor
+		colorValue = abs(cos((float) glfwGetTime()));
+
+		glUniform4f(colorLoc, colorValue, 0.0f, 0.0f, 1.0f); // enviando cor para variável uniform inputColor
 
 		// Chamada de desenho - drawcall
 		// Poligono Preenchido - GL_TRIANGLES
