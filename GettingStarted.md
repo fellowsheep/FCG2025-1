@@ -79,6 +79,25 @@ Para isso, você pode ir no menu View -> Extensions ou clicar no ícone <img src
 
 ---
 
+### 4️⃣ Instalar o Git (Necessário para o CMake FetchContent) <img src="https://github.com/user-attachments/assets/b125ae64-af3c-4343-a0b2-3a46d6d14500" alt="Git Logo" width="32" style="vertical-align: middle;" />
+
+O **CMake FetchContent** baixa automaticamente dependências, como a **GLFW**, e para isso ele precisa do **Git** instalado no sistema.
+
+- **Baixe e instale o Git** pelo site oficial:  
+🔗 [Download Git](https://git-scm.com/downloads)  
+
+Durante a instalação, **habilite a opção "Add Git to PATH"**, para que ele possa ser acessado pelo CMake.
+
+- **Verifique se o Git está instalado corretamente** executando no terminal (CMD ou PowerShell):  
+
+```sh
+git --version
+```
+
+Se aparecer algo como **`git version 2.x.x`**, significa que a instalação foi bem-sucedida.
+
+---
+
 ## 📌 2. Clonando o Repositório de Exemplo
 
 Agora vamos baixar o código de exemplo:
