@@ -15,11 +15,12 @@
 *.dll
 *.so
 
-# Ignorar dependências baixadas automaticamente pelo CMake (GLFW FetchContent)
+# Ignorar dependências baixadas automaticamente pelo CMake 
 _build/
 _deps/
 glfw-src/
 glfw-build/
+external/
 
 # Ignorar configurações específicas do VSCode
 .vscode/
