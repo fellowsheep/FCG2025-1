@@ -1,11 +1,11 @@
-# PGCCHIB - Processamento Gráfico
+# Fundamentos de Computação Gráfica 2025/1
 
-Este repositório contém exemplos e códigos utilizados nas disciplinas de **Processamento Gráfico** e **Fundamentos de Computação Gráfica**. Ele é estruturado para facilitar a organização dos arquivos e a compilação dos projetos utilizando CMake.
+Este repositório contém exemplos e códigos utilizados nas disciplina de **Fundamentos de Computação Gráfica** do curso Jogos Digitais da Unisinos. Ele é estruturado para facilitar a organização dos arquivos e a compilação dos projetos utilizando CMake.
 
 ## 📂 Estrutura do Repositório
 
 ```plaintext
-📂 PGCCHIB/
+📂 FCG2025-1/
 ├── 📂 include/               # Cabeçalhos e bibliotecas de terceiros
 │   ├── 📂 glad/              # Cabeçalhos da GLAD (OpenGL Loader)
 │   │   ├── glad.h
@@ -44,3 +44,4 @@ Após a geração, extraia os arquivos baixados e coloque-os nos diretórios cor
 - Copie **`glad.c`** para `common/`
 
 🚨 **Sem esses arquivos, a compilação falhará!** É necessário colocar esses arquivos nos diretórios corretos, conforme a orientação acima.
+
