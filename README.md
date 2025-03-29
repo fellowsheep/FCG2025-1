@@ -1,6 +1,6 @@
 # Fundamentos de Computação Gráfica 2025/1
 
-Este repositório contém exemplos e códigos utilizados nas disciplina de **Fundamentos de Computação Gráfica** do curso Jogos Digitais da Unisinos. Ele é estruturado para facilitar a organização dos arquivos e a compilação dos projetos utilizando CMake.
+Este repositório contém exemplos e códigos utilizados na disciplina de **Fundamentos de Computação Gráfica** do curso Jogos Digitais da Unisinos. Ele é estruturado para facilitar a organização dos arquivos e a compilação dos projetos utilizando CMake.
 
 ## 📂 Estrutura do Repositório
 
@@ -12,15 +12,16 @@ Este repositório contém exemplos e códigos utilizados nas disciplina de **Fun
 │   │   ├── 📂 KHR/           # Diretório com cabeçalhos da Khronos (GLAD)
 │   │       ├── khrplatform.h
 ├── 📂 common/                # Código reutilizável entre os projetos
-│   ├── glad.c                # Implementação da GLAD
-├── 📂 src/                   # Código-fonte dos exemplos e exercícios
-│   ├── HelloTriangle.cpp     # Exemplo básico de renderização com OpenGL
-│   ├── HelloTransform.cpp    # Exemplo de transformação de objetos em OpenGL
-│   ├── ...                   # Outros exemplos e exercícios futuros
-├── 📂 build/                 # Diretório gerado pelo CMake (não incluído no repositório)
-├── 📄 CMakeLists.txt         # Configuração do CMake para compilar os projetos
-├── 📄 README.md              # Este arquivo, com a documentação do repositório
-├── 📄 GettingStarted.md      # Tutorial detalhado sobre como compilar usando o CMake
+│   ├── glad.c                 # Implementação da GLAD
+├── 📂 src/                    # Código-fonte dos exemplos e exercícios
+│   ├── HelloTriangle.cpp      # Exemplo básico de renderização com OpenGL
+│   ├── HelloTransform.cpp     # Exemplo de transformação de objetos em OpenGL
+│   ├── ...                    # Outros exemplos e exercícios futuros
+├── 📂 build/                  # Diretório gerado pelo CMake (não incluído no repositório)
+├── 📄 CMakeLists.txt          # Configuração do CMake para compilar os projetos
+├── 📄 README.md               # Este arquivo, com a documentação do repositório
+├── 📄 GettingStarted.md       # Tutorial detalhado sobre como compilar usando o CMake
+├── 📄 ...  
 ```
 
 Siga as instruções detalhadas em [GettingStarted.md](GettingStarted.md) para configurar e compilar o projeto.
@@ -45,3 +46,36 @@ Após a geração, extraia os arquivos baixados e coloque-os nos diretórios cor
 
 🚨 **Sem esses arquivos, a compilação falhará!** É necessário colocar esses arquivos nos diretórios corretos, conforme a orientação acima.
 
+---
+
+## 📚 Sugestão de Estrutura para seu próprio repositório
+
+Recomendamos que você crie um repositório próprio, estruturado com subdiretórios dentro de `src`, para organizar suas atividades da disciplina:
+
+```
+📁 FCG2025-1/
+├── 📁 src/
+│   ├── 📁 Lista1/
+│   │   ├── Ex1.cpp
+│   │   ├── Ex2.cpp
+│   │   ├── ...
+│   │   └── README.md
+│   ├── 📁 Lista2/
+│   │   ├── Ex1.cpp
+│   │   ├── ...
+│   │   └── README.md
+│   ├── 📁 TrabalhoGrauA/
+│   │   ├── main.cpp
+│   │   └── README.md
+│   ├── 📁 ...
+├── 📁 include/   # Cabeçalhos comuns (se necessário)
+├── 📁 common/    # Arquivos comuns (como glad.c)
+├── 📄 CMakeLists.txt
+└── 📄 README.md
+```
+
+> Cada diretório dentro de `src/` pode conter um arquivo `README.md` com informações específicas sobre a atividade ou exercício implementado.
+
+Consulte os seguintes materiais para ajuda adicional:
+- [Tutorial de Entregas pelo Github](TutorialEntregasGithub.pdf)
+- [Organizando seu repositório no Github](OrganizandoRepositorioGithub.pdf)

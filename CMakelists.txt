@@ -15,6 +15,13 @@ FetchContent_Declare(
   GIT_TAG 3.4  # Define a versão desejada da GLFW
 )
 
+
+# Ajusta temporariamente a política e versão mínima para evitar warnings
+cmake_policy(PUSH)
+cmake_policy(SET CMP0048 NEW)
+cmake_minimum_required(VERSION 3.5...3.29)
+
+
 # Configura o FetchContent para baixar a GLM automaticamente
 FetchContent_Declare(
   glm
@@ -24,6 +31,9 @@ FetchContent_Declare(
 
 # Faz o download e compila as bibliotecas
 FetchContent_MakeAvailable(glfw glm)
+
+# Restaura a política e versão mínima anterior após configurar glm
+cmake_policy(POP)
 
 # Adiciona as pastas de cabeçalhos
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -36,7 +46,7 @@ include_directories(${glm_SOURCE_DIR})
 set(EXERCISES
     HelloTriangle
     HelloTransform
-    Hello2Triangles
+    Lista1/Hello2Triangles
 )
 
 add_compile_options(-Wno-pragmas)
@@ -62,7 +72,13 @@ endif()
 
 # Cria os executáveis
 foreach(EXERCISE ${EXERCISES})
-    add_executable(${EXERCISE} src/${EXERCISE}.cpp ${GLAD_C_FILE})
-    target_include_directories(${EXERCISE} PRIVATE ${CMAKE_SOURCE_DIR}/include/glad ${glm_SOURCE_DIR})
-    target_link_libraries(${EXERCISE} glfw ${OPENGL_LIBS})
+    # Extrai o nome do arquivo sem o diretório para o executável
+    get_filename_component(EXE_NAME ${EXERCISE} NAME)                                                                                                                                       
+    
+    # Adiciona o executável usando o nome do arquivo como nome do executável
+    add_executable(${EXE_NAME} src/${EXERCISE}.cpp ${GLAD_C_FILE})
+
+    # Configura as bibliotecas e include dirs para o executável
+    target_include_directories(${EXE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include/glad ${glm_SOURCE_DIR})
+    target_link_libraries(${EXE_NAME} glfw ${OPENGL_LIBS})
 endforeach()
