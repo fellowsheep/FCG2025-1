@@ -47,6 +47,16 @@ using namespace glm;
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+struct Sprite 
+{
+	GLuint VAO;
+	GLuint texID;
+	vec3 pos;
+	vec3 dimensions;
+	float angle; 
+
+};
+
 // Protótipo da função de callback de teclado
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
 
@@ -54,18 +64,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 int setupShader();
 int setupSprite();
 int loadTexture(string filePath);
+void drawSprite(GLuint shaderID, Sprite spr);
 
 // Dimensões da janela (pode ser alterado em tempo de execução)
 const GLuint WIDTH = 800, HEIGHT = 600;
-
-struct Sprite 
-{
-	GLuint texID;
-	vec3 pos;
-	vec3 dimensions;
-	float angle; 
-
-};
 
 // Código fonte do Vertex Shader (em GLSL): ainda hardcoded
 const GLchar *vertexShaderSource = R"(
@@ -95,6 +97,8 @@ void main()
 }
 )";
 
+bool keys[1024];
+
 
 
 // Função MAIN
@@ -119,6 +123,8 @@ int main()
 	// #ifdef __APPLE__
 	//	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	// #endif
+
+	for(int i=0; i<1024;i++) { keys[i] = false; }
 
 	// Criação da janela GLFW
 	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Ola Triangulo! -- Rossana", nullptr, nullptr);
@@ -154,16 +160,23 @@ int main()
 	// Compilando e buildando o programa de shader
 	GLuint shaderID = setupShader();
 
-	Sprite spr1, spr2;
+	Sprite background, spr1, spr2;
 
 	// Gerando um buffer simples, com a geometria de um triângulo
 	GLuint VAO = setupSprite();
 
+	background.VAO = VAO;
+	background.texID = loadTexture("../assets/tex/1.png");
+	background.pos = vec3(400,300,0);
+	background.dimensions = vec3(800, 600, 1);
+
 	// Carregando uma textura
+	spr1.VAO = VAO;
 	spr1.texID = loadTexture("../assets/tex/waterbear.png");
 	spr1.pos = vec3(400,300,0);
 	spr1.dimensions = vec3(32 * 2, 26 * 2, 1);
 
+	spr2.VAO = VAO;
 	spr2.texID = loadTexture("../assets/tex/microbio.png");
 	spr2.pos = vec3(200,300,0);
 	spr2.dimensions = vec3(32 * 4, 26 * 4, 1);
@@ -186,6 +199,14 @@ int main()
 	projection = ortho(0.0, 800.0, 0.0, 600.0, -1.0, 1.0);
 	// Envio para o shader
 	glUniformMatrix4fv(glGetUniformLocation(shaderID, "projection"), 1, GL_FALSE, value_ptr(projection));
+
+	//Habilitando transparência/função de mistura
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	//Habilitando teste de profundidade
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_ALWAYS);
 
 	// Loop da aplicação - "game loop"
 	while (!glfwWindowShouldClose(window))
@@ -216,37 +237,21 @@ int main()
 
 		// Limpa o buffer de cor
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // cor de fundo
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glLineWidth(10);
-		glPointSize(20);
+		if (keys[GLFW_KEY_LEFT] == true)
+		{
+			spr1.pos.x -= 1;		
+		}
+		if (keys[GLFW_KEY_RIGHT] == true)
+		{
+			spr1.pos.x += 1;		
+		}
 
-		// Neste código, usamos o mesmo buffer de geomtria para todos os sprites
-		glBindVertexArray(VAO);				 // Conectando ao buffer de geometria
+		drawSprite(shaderID,background);
+		drawSprite(shaderID,spr1);
+		drawSprite(shaderID,spr2);
 		
-		// Desenhar o sprite 1
-		glBindTexture(GL_TEXTURE_2D, spr1.texID); // Conectando ao buffer de textura
-		// Criação da  matriz de transformações do objeto
-		mat4 model = mat4(1);  // matriz identidade
-		model = translate(model, spr1.pos);
-		model = scale(model, spr1.dimensions);
-		glUniformMatrix4fv(glGetUniformLocation(shaderID, "model"), 1, GL_FALSE, value_ptr(model));
-		// Chamada de desenho - drawcall
-		// Poligono Preenchido - GL_TRIANGLES
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-		// Desenhar o sprite 2
-		glBindTexture(GL_TEXTURE_2D, spr2.texID); // Conectando ao buffer de textura
-		// Criação da  matriz de transformações do objeto
-		model = mat4(1);
-		model = translate(model, spr2.pos);
-		model = scale(model, spr2.dimensions);
-		glUniformMatrix4fv(glGetUniformLocation(shaderID, "model"), 1, GL_FALSE, value_ptr(model));
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		
-
-		// glBindVertexArray(0); // Desnecessário aqui, pois não há múltiplos VAOs
-
 		// Troca os buffers da tela
 		glfwSwapBuffers(window);
 	}
@@ -264,6 +269,15 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
+
+	if (action == GLFW_PRESS)
+	{
+		keys[key] = true;
+	}
+	else if (action == GLFW_RELEASE)
+	{
+		keys[key] = false;
+	}
 }
 
 // Esta função está bastante hardcoded - objetivo é compilar e "buildar" um programa de
@@ -395,6 +409,26 @@ int setupSprite()
 	glBindVertexArray(0);
 
 	return VAO;
+}
+
+void drawSprite(GLuint shaderID, Sprite spr)
+{
+	// Neste código, usamos o mesmo buffer de geomtria para todos os sprites
+	glBindVertexArray(spr.VAO);				 // Conectando ao buffer de geometria
+		
+	// Desenhar o sprite 1
+	glBindTexture(GL_TEXTURE_2D, spr.texID); // Conectando ao buffer de textura
+	// Criação da  matriz de transformações do objeto
+	mat4 model = mat4(1);  // matriz identidade
+	model = translate(model, spr.pos);
+	model = rotate(model, radians(spr.angle),vec3(0.0,0.0,1.0));
+	model = scale(model, spr.dimensions);
+	glUniformMatrix4fv(glGetUniformLocation(shaderID, "model"), 1, GL_FALSE, value_ptr(model));
+	// Chamada de desenho - drawcall
+	// Poligono Preenchido - GL_TRIANGLES
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glBindVertexArray(0); // Desnecessário aqui, pois não há múltiplos VAOs
 }
 
 int loadTexture(string filePath)
