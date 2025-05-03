@@ -55,7 +55,9 @@ struct Sprite
 	vec3 dimensions;
 	float angle;
 	float vel; 
-
+	int nAnimations, nFrames;
+	int iFrame, iAnimation;
+	float ds, dt;
 };
 
 // Protótipo da função de callback de teclado
@@ -63,7 +65,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 // Protótipos das funções
 int setupShader();
-int setupSprite();
+int setupSprite(int nAnimations, int nFrames, float &ds, float &dt);
 int loadTexture(string filePath);
 void drawSprite(GLuint shaderID, Sprite spr);
 
@@ -92,13 +94,16 @@ const GLchar *fragmentShaderSource = R"(
 in vec2 tex_coord;
 out vec4 color;
 uniform sampler2D tex_buff;
+uniform vec2 offset_tex;
 void main()
 {
-	 color = texture(tex_buff,tex_coord);
+	 color = texture(tex_buff,tex_coord + offset_tex);
 }
 )";
 
 bool keys[1024];
+float FPS = 12.0;
+float lastTime = 0.0;
 
 
 
@@ -164,24 +169,28 @@ int main()
 	Sprite background, spr1, spr2;
 
 	// Gerando um buffer simples, com a geometria de um triângulo
-	GLuint VAO = setupSprite();
-
-	background.VAO = VAO;
+	background.VAO = setupSprite(1,1,background.ds,background.dt);
 	background.texID = loadTexture("../assets/tex/1.png");
 	background.pos = vec3(400,300,0);
 	background.dimensions = vec3(800, 600, 1);
+	background.angle = 0.0;
 
 	// Carregando uma textura
-	spr1.VAO = VAO;
-	spr1.texID = loadTexture("../assets/sprites/waterbear.png");
+	spr1.VAO = setupSprite(12,2,spr1.ds,spr1.dt);
+	spr1.texID = loadTexture("../assets/sprites/enemies-spritesheet1.png");
 	spr1.pos = vec3(400,300,0);
-	spr1.dimensions = vec3(32 * 2, 26 * 2, 1);
+	spr1.dimensions = vec3(20 * 4, 20 * 4, 1);
 	spr1.vel = 1.5;
+	spr1.nAnimations = 12;
+	spr1.nFrames = 2;
+	spr1.angle = 0.0;
+	spr1.iAnimation = 9;
+	spr1.iFrame = 0;
 
-	spr2.VAO = VAO;
-	spr2.texID = loadTexture("../assets/sprites/microbio.png");
-	spr2.pos = vec3(200,300,0);
-	spr2.dimensions = vec3(32 * 4, 26 * 4, 1);
+	//spr2.VAO = VAO;
+	//spr2.texID = loadTexture("../assets/sprites/microbio.png");
+	//spr2.pos = vec3(200,300,0);
+	//spr2.dimensions = vec3(32 * 4, 26 * 4, 1);
 
 	glUseProgram(shaderID); // Reseta o estado do shader para evitar problemas futuros
 
@@ -249,16 +258,27 @@ int main()
 		{
 			spr1.pos.x += spr1.vel;		
 		}
+		glUniform2f(glGetUniformLocation(shaderID, "offset_tex"),0.0,0.0);
 
 		drawSprite(shaderID,background);
+
+		float offsetS = spr1.iFrame * spr1.ds;
+		float offsetT = spr1.iAnimation * spr1.dt;
+		glUniform2f(glGetUniformLocation(shaderID, "offset_tex"),offsetS,offsetT);
 		drawSprite(shaderID,spr1);
-		drawSprite(shaderID,spr2);
+
+		float now = glfwGetTime();
+		float deltaTime = now - lastTime;
+		if (deltaTime >= 1/FPS)
+		{
+			spr1.iFrame = (spr1.iFrame + 1) % spr1.nFrames;
+			lastTime = now;
+		}
+		//drawSprite(shaderID,spr2);
 		
 		// Troca os buffers da tela
 		glfwSwapBuffers(window);
 	}
-	// Pede pra OpenGL desalocar os buffers
-	glDeleteVertexArrays(1, &VAO);
 	// Finaliza a execução da GLFW, limpando os recursos alocados por ela
 	glfwTerminate();
 	return 0;
@@ -339,39 +359,24 @@ int setupShader()
 // Apenas atributo coordenada nos vértices
 // 1 VBO com as coordenadas, VAO com apenas 1 ponteiro para atributo
 // A função retorna o identificador do VAO
-int setupSprite()
+int setupSprite(int nAnimations, int nFrames, float &ds, float &dt)
 {
+
+	ds = 1.0 / (float) nFrames;
+	dt = 1.0 / (float) nAnimations;
+
 	// Aqui setamos as coordenadas x, y e z do triângulo e as armazenamos de forma
 	// sequencial, já visando mandar para o VBO (Vertex Buffer Objects)
 	// Cada atributo do vértice (coordenada, cores, coordenadas de textura, normal, etc)
 	// Pode ser arazenado em um VBO único ou em VBOs separados
 	GLfloat vertices[] = {
 		// x   y   s     t
-		-0.5,
-		0.5,
-		0.0,
-		1.0,
-		-0.5,
-		-0.5,
-		0.0,
-		0.0,
-		0.5,
-		0.5,
-		1.0,
-		1.0,
-
-		-0.5,
-		-0.5,
-		0.0,
-		0.0,
-		0.5,
-		-0.5,
-		1.0,
-		0.0,
-		0.5,
-		0.5,
-		1.0,
-		1.0,
+		-0.5, 0.5, 0.0, dt,
+		-0.5,-0.5, 0.0,	0.0,
+		 0.5, 0.5, ds, dt,
+		-0.5,-0.5, 0.0,	0.0,
+		 0.5,-0.5, ds, 0.0,
+		 0.5, 0.5, ds,	dt,
 	};
 
 	GLuint VBO, VAO;
