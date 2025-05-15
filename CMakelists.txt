@@ -53,6 +53,8 @@ set(EXERCISES
     HelloTexture
     HelloSprite
     HelloSpritesheet
+    HelloTiles
+    Hello3D
     Lista1/Ex6
     Lista1/Ex9
 )

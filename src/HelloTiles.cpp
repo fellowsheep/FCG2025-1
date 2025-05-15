@@ -47,17 +47,58 @@ using namespace glm;
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-struct Sprite 
+struct Sprite
 {
 	GLuint VAO;
 	GLuint texID;
 	vec3 pos;
 	vec3 dimensions;
 	float angle;
-	float vel; 
+	float vel;
 	int nAnimations, nFrames;
 	int iFrame, iAnimation;
 	float ds, dt;
+};
+
+struct Tileset
+{
+	GLuint VAO;
+	GLuint texID;
+	vec3 pos;
+	vec3 dimensions;
+	int nTiles;
+	float ds;
+};
+
+#define MAP_WIDTH 5
+#define MAP_HEIGHT 5
+
+int tilemap[MAP_HEIGHT][MAP_WIDTH] = {
+	1,
+	1,
+	1,
+	1,
+	1,
+	0,
+	1,
+	1,
+	1,
+	0,
+	4,
+	0,
+	0,
+	0,
+	4,
+	5,
+	4,
+	4,
+	4,
+	5,
+	5,
+	5,
+	5,
+	5,
+	5,
 };
 
 // Protótipo da função de callback de teclado
@@ -66,8 +107,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 // Protótipos das funções
 int setupShader();
 int setupSprite(int nAnimations, int nFrames, float &ds, float &dt);
+int setupTileset(int nTiles, float &ds);
 int loadTexture(string filePath);
 void drawSprite(GLuint shaderID, Sprite spr);
+void drawTilemap(GLuint shaderID, Tileset tileset);
 
 // Dimensões da janela (pode ser alterado em tempo de execução)
 const GLuint WIDTH = 800, HEIGHT = 600;
@@ -105,8 +148,6 @@ bool keys[1024];
 float FPS = 12.0;
 float lastTime = 0.0;
 
-
-
 // Função MAIN
 int main()
 {
@@ -130,10 +171,13 @@ int main()
 	//	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	// #endif
 
-	for(int i=0; i<1024;i++) { keys[i] = false; }
+	for (int i = 0; i < 1024; i++)
+	{
+		keys[i] = false;
+	}
 
 	// Criação da janela GLFW
-	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Ola Spritesheet! -- Rossana", nullptr, nullptr);
+	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Ola Tilemap! -- Rossana", nullptr, nullptr);
 	if (!window)
 	{
 		std::cerr << "Falha ao criar a janela GLFW" << std::endl;
@@ -169,17 +213,17 @@ int main()
 	Sprite background, spr1, spr2;
 
 	// Gerando um buffer simples, com a geometria de um triângulo
-	background.VAO = setupSprite(1,1,background.ds,background.dt);
+	background.VAO = setupSprite(1, 1, background.ds, background.dt);
 	background.texID = loadTexture("../assets/tex/1.png");
-	background.pos = vec3(400,300,0);
+	background.pos = vec3(400, 300, 0);
 	background.dimensions = vec3(800, 600, 1);
 	background.angle = 0.0;
 
 	// Carregando uma textura
-	spr1.VAO = setupSprite(12,2,spr1.ds,spr1.dt);
+	spr1.VAO = setupSprite(12, 2, spr1.ds, spr1.dt);
 	spr1.texID = loadTexture("../assets/sprites/enemies-spritesheet1.png");
-	spr1.pos = vec3(400,300,0);
-	spr1.dimensions = vec3(20 * 4, 20 * 4, 1);
+	spr1.pos = vec3(400, 300, 0);
+	spr1.dimensions = vec3(20 * 2, 20 * 2, 1);
 	spr1.vel = 1.5;
 	spr1.nAnimations = 12;
 	spr1.nFrames = 2;
@@ -187,10 +231,17 @@ int main()
 	spr1.iAnimation = 9;
 	spr1.iFrame = 0;
 
-	//spr2.VAO = VAO;
-	//spr2.texID = loadTexture("../assets/sprites/microbio.png");
-	//spr2.pos = vec3(200,300,0);
-	//spr2.dimensions = vec3(32 * 4, 26 * 4, 1);
+	// spr2.VAO = VAO;
+	// spr2.texID = loadTexture("../assets/sprites/microbio.png");
+	// spr2.pos = vec3(200,300,0);
+	// spr2.dimensions = vec3(32 * 4, 26 * 4, 1);
+
+	Tileset tileset;
+	tileset.nTiles = 7;
+	tileset.VAO = setupTileset(tileset.nTiles, tileset.ds);
+	tileset.pos = vec3(0.0, 0.0, 0.0);
+	tileset.dimensions = vec3(39, 39, 1);
+	tileset.texID = loadTexture("../assets/tilesets/tileset.png");
 
 	glUseProgram(shaderID); // Reseta o estado do shader para evitar problemas futuros
 
@@ -211,11 +262,11 @@ int main()
 	// Envio para o shader
 	glUniformMatrix4fv(glGetUniformLocation(shaderID, "projection"), 1, GL_FALSE, value_ptr(projection));
 
-	//Habilitando transparência/função de mistura
+	// Habilitando transparência/função de mistura
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	//Habilitando teste de profundidade
+	// Habilitando teste de profundidade
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_ALWAYS);
 
@@ -252,15 +303,26 @@ int main()
 
 		if (keys[GLFW_KEY_LEFT] == true || keys[GLFW_KEY_A] == true)
 		{
-			spr1.pos.x -= spr1.vel;		
+			spr1.pos.x -= spr1.vel;
 		}
 		if (keys[GLFW_KEY_RIGHT] == true || keys[GLFW_KEY_D] == true)
 		{
-			spr1.pos.x += spr1.vel;		
+			spr1.pos.x += spr1.vel;
 		}
-		glUniform2f(glGetUniformLocation(shaderID, "offset_tex"),0.0,0.0);
+		// glUniform2f(glGetUniformLocation(shaderID, "offset_tex"),0.0,0.0);
 
-		drawSprite(shaderID,background);
+		// drawSprite(shaderID,background);
+
+		drawTilemap(shaderID, tileset);
+
+		float x0 = tileset.dimensions.x/2.0;
+		float y0 = tileset.dimensions.y/2.0;
+		int i = 3;
+		int j = 2;
+
+		spr1.pos.x = x0 + j * tileset.dimensions.x;
+		spr1.pos.y = HEIGHT - y0 - i * tileset.dimensions.y;
+		spr1.pos.z = 0.0;
 
 		float offsetS = spr1.iFrame * spr1.ds;
 		float offsetT = spr1.iAnimation * spr1.dt;
@@ -274,8 +336,10 @@ int main()
 			spr1.iFrame = (spr1.iFrame + 1) % spr1.nFrames;
 			lastTime = now;
 		}
-		//drawSprite(shaderID,spr2);
 		
+
+		
+
 		// Troca os buffers da tela
 		glfwSwapBuffers(window);
 	}
@@ -362,8 +426,8 @@ int setupShader()
 int setupSprite(int nAnimations, int nFrames, float &ds, float &dt)
 {
 
-	ds = 1.0 / (float) nFrames;
-	dt = 1.0 / (float) nAnimations;
+	ds = 1.0 / (float)nFrames;
+	dt = 1.0 / (float)nAnimations;
 
 	// Aqui setamos as coordenadas x, y e z do triângulo e as armazenamos de forma
 	// sequencial, já visando mandar para o VBO (Vertex Buffer Objects)
@@ -371,12 +435,30 @@ int setupSprite(int nAnimations, int nFrames, float &ds, float &dt)
 	// Pode ser arazenado em um VBO único ou em VBOs separados
 	GLfloat vertices[] = {
 		// x   y   s     t
-		-0.5, 0.5, 0.0, dt,
-		-0.5,-0.5, 0.0,	0.0,
-		 0.5, 0.5, ds, dt,
-		-0.5,-0.5, 0.0,	0.0,
-		 0.5,-0.5, ds, 0.0,
-		 0.5, 0.5, ds,	dt,
+		-0.5,
+		0.5,
+		0.0,
+		dt,
+		-0.5,
+		-0.5,
+		0.0,
+		0.0,
+		0.5,
+		0.5,
+		ds,
+		dt,
+		-0.5,
+		-0.5,
+		0.0,
+		0.0,
+		0.5,
+		-0.5,
+		ds,
+		0.0,
+		0.5,
+		0.5,
+		ds,
+		dt,
 	};
 
 	GLuint VBO, VAO;
@@ -421,14 +503,14 @@ int setupSprite(int nAnimations, int nFrames, float &ds, float &dt)
 void drawSprite(GLuint shaderID, Sprite spr)
 {
 	// Neste código, usamos o mesmo buffer de geomtria para todos os sprites
-	glBindVertexArray(spr.VAO);				 // Conectando ao buffer de geometria
-		
+	glBindVertexArray(spr.VAO); // Conectando ao buffer de geometria
+
 	// Desenhar o sprite 1
 	glBindTexture(GL_TEXTURE_2D, spr.texID); // Conectando ao buffer de textura
 	// Criação da  matriz de transformações do objeto
-	mat4 model = mat4(1);  // matriz identidade
+	mat4 model = mat4(1); // matriz identidade
 	model = translate(model, spr.pos);
-	model = rotate(model, radians(spr.angle),vec3(0.0,0.0,1.0));
+	model = rotate(model, radians(spr.angle), vec3(0.0, 0.0, 1.0));
 	model = scale(model, spr.dimensions);
 	glUniformMatrix4fv(glGetUniformLocation(shaderID, "model"), 1, GL_FALSE, value_ptr(model));
 	// Chamada de desenho - drawcall
@@ -478,4 +560,115 @@ int loadTexture(string filePath)
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	return texID;
+}
+
+int setupTileset(int nTiles, float &ds)
+{
+	ds = 1.0 / (float)nTiles;
+
+	// Aqui setamos as coordenadas x, y e z do triângulo e as armazenamos de forma
+	// sequencial, já visando mandar para o VBO (Vertex Buffer Objects)
+	// Cada atributo do vértice (coordenada, cores, coordenadas de textura, normal, etc)
+	// Pode ser arazenado em um VBO único ou em VBOs separados
+	GLfloat vertices[] = {
+		// x   y   s     t
+		-0.5,
+		0.5,
+		0.0,
+		1.0,
+		-0.5,
+		-0.5,
+		0.0,
+		0.0,
+		0.5,
+		0.5,
+		ds,
+		1.0,
+		-0.5,
+		-0.5,
+		0.0,
+		0.0,
+		0.5,
+		-0.5,
+		ds,
+		0.0,
+		0.5,
+		0.5,
+		ds,
+		1.0,
+	};
+
+	GLuint VBO, VAO;
+	// Geração do identificador do VBO
+	glGenBuffers(1, &VBO);
+	// Faz a conexão (vincula) do buffer como um buffer de array
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	// Envia os dados do array de floats para o buffer da OpenGl
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	// Geração do identificador do VAO (Vertex Array Object)
+	glGenVertexArrays(1, &VAO);
+	// Vincula (bind) o VAO primeiro, e em seguida  conecta e seta o(s) buffer(s) de vértices
+	// e os ponteiros para os atributos
+	glBindVertexArray(VAO);
+	// Para cada atributo do vertice, criamos um "AttribPointer" (ponteiro para o atributo), indicando:
+	//  Localização no shader * (a localização dos atributos devem ser correspondentes no layout especificado no vertex shader)
+	//  Numero de valores que o atributo tem (por ex, 3 coordenadas xyz)
+	//  Tipo do dado
+	//  Se está normalizado (entre zero e um)
+	//  Tamanho em bytes
+	//  Deslocamento a partir do byte zero
+
+	// Ponteiro pro atributo 0 - Posição - coordenadas x, y
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
+	glEnableVertexAttribArray(0);
+
+	// Ponteiro pro atributo 2 - Coordenada de textura - coordenadas s,t
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
+
+	// Observe que isso é permitido, a chamada para glVertexAttribPointer registrou o VBO como o objeto de buffer de vértice
+	// atualmente vinculado - para que depois possamos desvincular com segurança
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	// Desvincula o VAO (é uma boa prática desvincular qualquer buffer ou array para evitar bugs medonhos)
+	glBindVertexArray(0);
+
+	return VAO;
+}
+
+void drawTilemap(GLuint shaderID, Tileset tileset)
+{
+	float x0 = tileset.dimensions.x/2.0;
+	float y0 = tileset.dimensions.y/2.0;
+
+
+	for (int i = 0; i < MAP_HEIGHT; i++) // percorre as linhas do mapa
+	{
+		for (int j = 0; j < MAP_WIDTH; j++) // percorre as colunas do mapa
+		{
+			int iTile = tilemap[i][j];
+			float offsetS = iTile * tileset.ds;
+			glUniform2f(glGetUniformLocation(shaderID, "offset_tex"), offsetS, 0.0);
+
+			vec3 tilePos;
+			tilePos.x = x0 + j * tileset.dimensions.x;
+			tilePos.y = HEIGHT - y0 - i * tileset.dimensions.y;
+			tilePos.z = 0.0;
+
+			// Neste código, usamos o mesmo buffer de geomtria para todos os sprites
+			glBindVertexArray(tileset.VAO); // Conectando ao buffer de geometria
+
+			// Desenhar o sprite 1
+			glBindTexture(GL_TEXTURE_2D, tileset.texID); // Conectando ao buffer de textura
+			// Criação da  matriz de transformações do objeto
+			mat4 model = mat4(1); // matriz identidade
+			model = translate(model, tilePos);
+			model = scale(model, tileset.dimensions);
+			glUniformMatrix4fv(glGetUniformLocation(shaderID, "model"), 1, GL_FALSE, value_ptr(model));
+			// Chamada de desenho - drawcall
+			// Poligono Preenchido - GL_TRIANGLES
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+	}
 }
