@@ -71,7 +71,7 @@ void drawSprite(GLuint shaderID, Sprite spr);
 const GLuint WIDTH = 800, HEIGHT = 600;
 
 // Código fonte do Vertex Shader (em GLSL): ainda hardcoded
-const GLchar *vertexShaderSource = R"(
+const GLchar *vertexShaderSource = R"glsl(
  #version 400
  layout (location = 0) in vec2 position;
  layout (location = 1) in vec2 texc;
@@ -84,10 +84,10 @@ const GLchar *vertexShaderSource = R"(
 	tex_coord = vec2(texc.s,1.0-texc.t);
 	gl_Position = projection * model * vec4(position, 0.0, 1.0);
  }
- )";
+ )glsl";
 
 // Código fonte do Fragment Shader (em GLSL): ainda hardcoded
-const GLchar *fragmentShaderSource = R"(
+const GLchar *fragmentShaderSource = R"glsl(
  #version 400
 in vec2 tex_coord;
 out vec4 color;
@@ -96,7 +96,7 @@ void main()
 {
 	 color = texture(tex_buff,tex_coord);
 }
-)";
+)glsl";
 
 bool keys[1024];
 

@@ -58,6 +58,8 @@ set(EXERCISES
     HelloCamera
     HelloCamera3D
     HelloCamera3DControle
+    HelloVoxel
+    HelloMinecraft
     Lista1/Ex6
     Lista1/Ex9
 )
