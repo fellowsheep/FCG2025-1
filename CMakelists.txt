@@ -55,6 +55,9 @@ set(EXERCISES
     HelloSpritesheet
     HelloTiles
     Hello3D
+    HelloCamera
+    HelloCamera3D
+    HelloCamera3DControle
     Lista1/Ex6
     Lista1/Ex9
 )
